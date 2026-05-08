@@ -1,3 +1,4 @@
+import asyncio
 import os
 import httpx
 from dotenv import load_dotenv
@@ -315,6 +316,180 @@ async def get_passport_stamp_locations(park_code: str = None, query: str = None)
         query: Optional search term.
     """
     return await nps_get("passportstamplocations", {"parkCode": park_code, "q": query})
+
+
+# ---------------------------------------------------------------------------
+# Plan a visit (composite tool — calls multiple endpoints in parallel)
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def plan_visit(park_code: str) -> dict:
+    """
+    One-stop trip planning summary for a national park. Fetches park details,
+    current alerts, entrance fees, visitor center hours, top things to do,
+    campgrounds, and upcoming events — all in a single call.
+
+    Use this when a user wants to plan a trip or get an overview of a park.
+
+    Args:
+        park_code: 4-letter park code, e.g. "yell", "grca", "yose".
+                   Use list_known_parks() to see available codes.
+    """
+    park_name = PARK_CODES.get(park_code, park_code)
+
+    results = await asyncio.gather(
+        nps_get("parks", {"parkCode": park_code, "fields": "description,weatherInfo,directionsInfo,operatingHours,entranceFees,addresses,contacts"}),
+        nps_get("alerts", {"parkCode": park_code}),
+        nps_get("feespasses", {"parkCode": park_code, "limit": 5}),
+        nps_get("visitorcenters", {"parkCode": park_code}),
+        nps_get("thingstodo", {"parkCode": park_code, "limit": 10}),
+        nps_get("campgrounds", {"parkCode": park_code, "limit": 5}),
+        nps_get("events", {"parkCode": park_code, "pageSize": 5}),
+        return_exceptions=True,
+    )
+
+    def safe(result):
+        return result if not isinstance(result, Exception) else {"error": str(result)}
+
+    return {
+        "park": park_name,
+        "park_code": park_code,
+        "info":           safe(results[0]),
+        "alerts":         safe(results[1]),
+        "fees_passes":    safe(results[2]),
+        "visitor_centers": safe(results[3]),
+        "things_to_do":   safe(results[4]),
+        "campgrounds":    safe(results[5]),
+        "events":         safe(results[6]),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Activities & topics reverse lookup
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def get_activities_parks(activity_id: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Find national parks that offer a specific activity (reverse lookup: activity → parks).
+    Use this to answer questions like "Which parks offer rock climbing?" or "Where can I stargaze?"
+
+    To find activity IDs first, call get_activities() and note the id field.
+
+    Args:
+        activity_id: Optional activity ID (from get_activities). Can be comma-separated for multiple.
+        query: Optional activity name to search, e.g. "hiking", "kayaking", "stargazing".
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("activities/parks", {"id": activity_id, "q": query, "limit": limit})
+
+
+@mcp.tool()
+async def get_topics_parks(topic_id: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Find national parks associated with a specific topic (reverse lookup: topic → parks).
+    Use this to answer questions like "Which parks relate to Civil War history?" or "Where can I learn about geology?"
+
+    To find topic IDs first, call get_topics() and note the id field.
+
+    Args:
+        topic_id: Optional topic ID (from get_topics). Can be comma-separated for multiple.
+        query: Optional topic name to search, e.g. "Civil War", "geology", "Indigenous".
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("topics/parks", {"id": topic_id, "q": query, "limit": limit})
+
+
+# ---------------------------------------------------------------------------
+# Amenities
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def get_amenities(query: str = None) -> dict:
+    """
+    Browse all amenity types available across NPS sites
+    (e.g. restrooms, fire pits, picnic tables, accessible trails, showers).
+
+    Args:
+        query: Optional search term to filter amenities.
+    """
+    return await nps_get("amenities", {"q": query})
+
+
+@mcp.tool()
+async def get_amenities_places(park_code: str = None, amenity_id: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Find specific places within a park that have a particular amenity.
+    Great for accessibility planning — e.g. "Find places in Yellowstone with accessible restrooms."
+
+    To find amenity IDs first, call get_amenities() and note the id field.
+
+    Args:
+        park_code: Optional 4-letter park code, e.g. "yell", "grca".
+        amenity_id: Optional amenity ID (from get_amenities). Can be comma-separated.
+        query: Optional amenity name to search.
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("amenities/parksplaces", {"parkCode": park_code, "id": amenity_id, "q": query, "limit": limit})
+
+
+@mcp.tool()
+async def get_amenities_visitor_centers(park_code: str = None, amenity_id: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Find visitor centers that offer a specific amenity (e.g. accessible entrance, bookstore, wifi).
+
+    To find amenity IDs first, call get_amenities() and note the id field.
+
+    Args:
+        park_code: Optional 4-letter park code, e.g. "yell", "yose".
+        amenity_id: Optional amenity ID (from get_amenities). Can be comma-separated.
+        query: Optional amenity name to search.
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("amenities/parksvisitorcenters", {"parkCode": park_code, "id": amenity_id, "q": query, "limit": limit})
+
+
+# ---------------------------------------------------------------------------
+# Multimedia
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def get_photo_galleries(park_code: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Get photo galleries published by a national park or NPS entity.
+
+    Args:
+        park_code: Optional 4-letter park code, e.g. "yose", "glac".
+        query: Optional search term.
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("multimedia/galleries", {"parkCode": park_code, "q": query, "limit": limit})
+
+
+@mcp.tool()
+async def get_videos(park_code: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Get videos published by a national park or NPS entity.
+
+    Args:
+        park_code: Optional 4-letter park code, e.g. "yell", "havo".
+        query: Optional search term.
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("multimedia/videos", {"parkCode": park_code, "q": query, "limit": limit})
+
+
+@mcp.tool()
+async def get_audio(park_code: str = None, query: str = None, limit: int = 10) -> dict:
+    """
+    Get audio recordings and tours published by a national park or NPS entity.
+
+    Args:
+        park_code: Optional 4-letter park code, e.g. "acad", "shen".
+        query: Optional search term.
+        limit: Maximum number of results (default 10).
+    """
+    return await nps_get("multimedia/audio", {"parkCode": park_code, "q": query, "limit": limit})
 
 
 # ---------------------------------------------------------------------------

@@ -107,29 +107,67 @@ This opens a browser UI where you can call each tool manually and inspect respon
 
 ## Available Tools
 
+### 🗺️ Trip Planning
 | Tool | Description |
 |------|-------------|
-| `list_known_parks` | List all park codes and full names known to this server |
+| `plan_visit` | **One-stop trip planner** — fetches alerts, fees, visitor centers, things to do, campgrounds, and events for a park in a single call |
+| `list_known_parks` | List all 63 park codes and full names |
 | `search_parks` | Search parks by name or keyword, optionally filtered by state |
-| `get_park` | Get full details for a specific park by code |
-| `get_park_alerts` | Current closures, dangers, and notices for a park |
+| `get_park` | Full details for a specific park (description, hours, directions, weather) |
+
+### 🚨 Alerts & News
+| Tool | Description |
+|------|-------------|
+| `get_park_alerts` | Current closures, dangers, cautions, and notices |
+| `get_news_releases` | Recent press releases from a park |
+| `get_road_events` | Road closures and construction zones |
+
+### 🏛️ Facilities
+| Tool | Description |
+|------|-------------|
 | `get_visitor_centers` | Visitor center hours and contact info |
 | `get_parking_lots` | Parking lot capacity, accessibility, and live occupancy |
 | `get_campgrounds` | Campground details, fees, and reservations |
-| `get_events` | Upcoming ranger programs and park events |
-| `get_things_to_do` | Recommended activities (hiking, fishing, stargazing, etc.) |
-| `get_tours` | Guided tours available at a park |
 | `get_webcams` | Live webcam feeds |
+
+### 🥾 Activities & Experiences
+| Tool | Description |
+|------|-------------|
+| `get_things_to_do` | Recommended activities at a park |
+| `get_tours` | Guided tours available at a park |
+| `get_events` | Upcoming ranger programs and park events |
+| `get_activities` | Browse all activity categories (hiking, kayaking, stargazing, etc.) |
+| `get_activities_parks` | **Reverse lookup** — find parks that offer a specific activity |
+| `get_topics` | Browse all topic categories (Civil War, geology, Indigenous culture, etc.) |
+| `get_topics_parks` | **Reverse lookup** — find parks associated with a specific topic |
+
+### ♿ Amenities
+| Tool | Description |
+|------|-------------|
+| `get_amenities` | Browse all amenity types (restrooms, fire pits, picnic tables, etc.) |
+| `get_amenities_places` | Find places within a park that have a specific amenity |
+| `get_amenities_visitor_centers` | Find visitor centers with a specific amenity |
+
+### 🎟️ Fees & Passes
+| Tool | Description |
+|------|-------------|
 | `get_fees_passes` | Entrance fees and pass information |
-| `get_news_releases` | Recent press releases from a park |
-| `get_road_events` | Road closures and construction zones |
+
+### 📸 Multimedia
+| Tool | Description |
+|------|-------------|
+| `get_photo_galleries` | Photo galleries published by parks |
+| `get_videos` | Video content from parks |
+| `get_audio` | Audio tours and recordings |
+
+### 📚 Educational Content
+| Tool | Description |
+|------|-------------|
 | `get_places` | Notable landmarks and places within a park |
 | `get_people` | Historical figures and conservationists associated with a park |
 | `get_articles` | Educational articles published by the park |
 | `get_lesson_plans` | Teacher lesson plans related to a park |
 | `get_passport_stamp_locations` | Where to collect National Park Passport stamps |
-| `get_activities` | Browse all activity categories across the NPS |
-| `get_topics` | Browse all topic categories (history, geology, etc.) |
 
 ---
 
@@ -250,17 +288,38 @@ All 63 officially designated U.S. National Parks are pre-mapped. For any other N
 
 Once connected to Claude, try asking:
 
-- *"What are the current alerts at Yellowstone?"*
-- *"Find campgrounds in Yosemite National Park."*
+**Trip Planning**
+- *"Help me plan a visit to Yellowstone National Park."*
+- *"I'm visiting the Grand Canyon next week — what should I know?"*
+
+**Alerts & Conditions**
+- *"Are there any closures or alerts at Yellowstone right now?"*
+- *"Are there road closures at Glacier National Park?"*
+
+**Activities**
+- *"Which national parks offer stargazing?"*
+- *"Where can I go kayaking in a national park?"*
+- *"What are the best things to do at Zion?"*
+
+**History & Topics**
+- *"Which parks relate to Civil War history?"*
+- *"Find parks connected to Indigenous culture."*
+
+**Facilities & Accessibility**
+- *"Find accessible restroom locations at Yellowstone."*
+- *"What visitor centers are in Grand Canyon and when are they open?"*
+- *"Show me parking lots at Yellowstone and their occupancy."*
+
+**General Discovery**
+- *"What national parks are in Utah?"*
+- *"Find campgrounds in Yosemite."*
 - *"What are the entrance fees for the Grand Canyon?"*
-- *"Show me parking lots at Yellowstone and their current occupancy."*
-- *"Are there any road closures at Glacier National Park?"*
-- *"What events are happening at Acadia this week?"*
-- *"What's there to do at Zion National Park?"*
-- *"Find national parks in Utah."*
+- *"Does Yellowstone have any live webcams?"*
 
 ---
 
 ## License
 
-This project is open source. The NPS API is a free public service provided by the U.S. National Park Service.
+This project is released under the [MIT License](LICENSE) — free to use, modify, and distribute for any purpose.
+
+The NPS API is a free public service provided by the U.S. National Park Service.
